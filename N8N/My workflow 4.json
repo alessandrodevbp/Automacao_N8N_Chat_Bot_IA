@@ -1,0 +1,452 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        0
+      ],
+      "id": "0994689e-bb09-4c4b-9858-b4f28b52222f",
+      "name": "Telegram Trigger",
+      "webhookId": "03d51355-8805-4a61-a68f-bfea6f60fa66",
+      "credentials": {
+        "telegramApi": {
+          "id": "1uOoH9SUwGWS5KDY",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um assistente inteligente da NOLA especializado em food service.\nUse APENAS as informações abaixo para responder. Não invente nada.\nSe não encontrar a resposta, diga claramente que não sabe.\nResponda de forma clara, profissional e objetiva.\nResponda SEMPRE em texto simples. Nunca use asteriscos, negrito, itálico, underline ou qualquer formatação markdown.\nVocê é assistente da NOLA. Use APENAS a base de dados abaixo.\nResponda em texto simples sem asteriscos ou markdown.\nSe não souber, diga claramente.\n\n=== BASE DE DADOS ===\n{{ $json.contexto }}\n\n=== PERGUNTA ===\n{{ $('Telegram Trigger').item.json.message.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        688,
+        0
+      ],
+      "id": "b232f299-da95-450c-959a-79d4a93a3801",
+      "name": "AI Agent",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('AI Agent').item.json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "c754ecfc-97f2-436c-9549-a6cd717314ec",
+      "name": "Send a text message",
+      "webhookId": "e55768e2-ea47-40aa-86d2-3331a3fbfd65",
+      "alwaysOutputData": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "1uOoH9SUwGWS5KDY",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $(\"Telegram Trigger\").item.json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "id": "fc85554a-5366-4b7d-8274-1564f38d662d",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        784,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        208
+      ],
+      "id": "5c15dd53-b751-4ee4-9a98-06a9a9954e45",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "i2csrHRyJQlmLnOY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\n\n\nconst produtos = allItems.filter(i => i.json.sku && i.json.ingredientes);\nconst estoque  = allItems.filter(i => i.json.sku_ingrediente);\nconst sops     = allItems.filter(i => i.json.id && String(i.json.id).startsWith('SOP'));\nconst faq      = allItems.filter(i => i.json.id && String(i.json.id).startsWith('FAQ'));\nconst vendas   = allItems.filter(i => i.json.pedido_id);\n\nconst blocoCardapio = produtos\n  .filter(i => i.json.ativo === 'Sim')\n  .map(i => {\n    const preco = typeof i.json.preco_venda === 'number'\n      ? i.json.preco_venda.toFixed(2)\n      : parseFloat(String(i.json.preco_venda).replace(',', '.')) || i.json.preco_venda;\n    return `• [${i.json.sku}] ${i.json.nome} — ${i.json.categoria}\n  💰 Preço: R$ ${preco}\n  🥗 Ingredientes: ${i.json.ingredientes}\n  🥛 Lactose: ${i.json.contem_lactose} | 🌱 Vegetariano: ${i.json.vegetariano} | 🛵 Delivery: ${i.json.disponivel_delivery}`;\n  }).join('\\n\\n');\n\nconst blocoEstoque = estoque.map(i =>\n  `• [${i.json.sku_ingrediente}] ${i.json.nome} — ${i.json.qtd_atual} ${i.json.unidade} | Status: ${i.json.status}`\n).join('\\n');\n\nconst blocoSops = sops.map(i =>\n  `• [${i.json.id}] ${i.json.categoria} — ${i.json.pergunta}\\n  ➜ ${i.json.resposta}`\n).join('\\n\\n');\n\nconst blocoFaq = faq.map(i =>\n  `• [${i.json.id}] ${i.json.pergunta}\\n  ➜ ${i.json.resposta}`\n).join('\\n\\n');\n\nconst resumoPorProduto = {};\nvendas.forEach(i => {\n  const nome  = i.json.produto || i.json.sku;\n  const qtd   = parseFloat(i.json.qtd) || 0;\n  const total = parseFloat(i.json.total) || 0;\n  if (!resumoPorProduto[nome]) resumoPorProduto[nome] = { qtd: 0, receita: 0 };\n  resumoPorProduto[nome].qtd     += qtd;\n  resumoPorProduto[nome].receita += total;\n});\n\nconst blocoResumoVendas = Object.entries(resumoPorProduto)\n  .sort((a, b) => b[1].qtd - a[1].qtd)\n  .map(([nome, v]) =>\n    `• ${nome} — ${v.qtd} vendidos | Receita: R$ ${v.receita.toFixed(2)}`\n  ).join('\\n');\n\nconst ultimosPedidos = vendas.slice(-10).reverse().map(i =>\n  `• [${i.json.pedido_id}] ${i.json.produto} x${i.json.qtd} — R$ ${i.json.total} | ${i.json.canal} | ${i.json.forma_pagamento}`\n).join('\\n');\n\nconst contexto = `\n=== CARDÁPIO NOLA ===\n${blocoCardapio}\n\n=== ESTOQUE DE INGREDIENTES ===\n${blocoEstoque}\n\n=== PROCEDIMENTOS OPERACIONAIS (SOPs) ===\n${blocoSops}\n\n=== PERGUNTAS FREQUENTES (FAQ) ===\n${blocoFaq}\n\n=== HISTÓRICO DE VENDAS ===\n📦 PRODUTOS MAIS VENDIDOS:\n${blocoResumoVendas}\n\n🕐 ÚLTIMOS 10 PEDIDOS:\n${ultimosPedidos}\n`.trim();\n\nconst mensagem = $input.first().json.message;\n\nreturn [{\n  json: {\n    contexto,\n    message: mensagem\n  }\n}];\nconst texto = $input.first().json.output;\n\nconst limpo = texto\n  .replace(/\\*\\*(.*?)\\*\\*/g, '$1')  // remove **negrito**\n  .replace(/\\*(.*?)\\*/g, '$1')      // remove *itálico*\n  .replace(/_(.*?)_/g, '$1')        // remove _underline_\n  .replace(/`(.*?)`/g, '$1')        // remove `código`\n  .replace(/\\[(.*?)\\]\\(.*?\\)/g, '$1') // remove [links](url)\n\nreturn [{ json: { \n  output: limpo,\n  chat_id: $('Telegram Trigger').first().json.message.chat.id\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        0
+      ],
+      "id": "bef3978f-2764-4746-b28f-ed1803b1e44a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        368,
+        -48
+      ],
+      "id": "7ee67c05-6f3c-4f80-a7b0-b1e5f86fca6c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "15ijvG97aByQwx6Q_Xd7_bWkoHmQdOJkE8f0cS0bSis0",
+          "mode": "list",
+          "cachedResultName": "faq",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ijvG97aByQwx6Q_Xd7_bWkoHmQdOJkE8f0cS0bSis0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 656505100,
+          "mode": "list",
+          "cachedResultName": "faq",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ijvG97aByQwx6Q_Xd7_bWkoHmQdOJkE8f0cS0bSis0/edit#gid=656505100"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        -256
+      ],
+      "id": "d20d2625-4330-4fb5-863b-69131a6a9a48",
+      "name": "FAQ",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AEQ1y1fsn9dqeTbc",
+          "name": "Google Sheets account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1YoBcJqEnhtxrYSwiYvP1K1cVo4-eArBS43VP7syUZEg",
+          "mode": "list",
+          "cachedResultName": "estoque",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YoBcJqEnhtxrYSwiYvP1K1cVo4-eArBS43VP7syUZEg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1299022073,
+          "mode": "list",
+          "cachedResultName": "estoque",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YoBcJqEnhtxrYSwiYvP1K1cVo4-eArBS43VP7syUZEg/edit#gid=1299022073"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        -128
+      ],
+      "id": "2142c7e0-8693-4a15-8fdd-24365453163f",
+      "name": "Estoque",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AEQ1y1fsn9dqeTbc",
+          "name": "Google Sheets account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vCFPGV7xO9JFJBfFFEMoPAtTrF59lCh-tx0LgiRR-eI",
+          "mode": "list",
+          "cachedResultName": "produtos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vCFPGV7xO9JFJBfFFEMoPAtTrF59lCh-tx0LgiRR-eI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2112814308,
+          "mode": "list",
+          "cachedResultName": "produtos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vCFPGV7xO9JFJBfFFEMoPAtTrF59lCh-tx0LgiRR-eI/edit#gid=2112814308"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        0
+      ],
+      "id": "6ebf3e04-4574-4923-8bd3-154b3efa2a40",
+      "name": "Produtos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AEQ1y1fsn9dqeTbc",
+          "name": "Google Sheets account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1M9DCARaRbhe-qZ8yxQja2-vtPEABMPoVaqVcMhZBjpY",
+          "mode": "list",
+          "cachedResultName": "vendas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1M9DCARaRbhe-qZ8yxQja2-vtPEABMPoVaqVcMhZBjpY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1368204634,
+          "mode": "list",
+          "cachedResultName": "vendas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1M9DCARaRbhe-qZ8yxQja2-vtPEABMPoVaqVcMhZBjpY/edit#gid=1368204634"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        128
+      ],
+      "id": "839c126d-da30-494f-8133-a4347ef3bcdf",
+      "name": "Vendas",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AEQ1y1fsn9dqeTbc",
+          "name": "Google Sheets account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1KZsGNYVFjVJZreQNIL7a9JljCaHLxCoWwlcwyt8ggeU",
+          "mode": "list",
+          "cachedResultName": "sops",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KZsGNYVFjVJZreQNIL7a9JljCaHLxCoWwlcwyt8ggeU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 374017663,
+          "mode": "list",
+          "cachedResultName": "sops",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KZsGNYVFjVJZreQNIL7a9JljCaHLxCoWwlcwyt8ggeU/edit#gid=374017663"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        288
+      ],
+      "id": "0584f9cf-b72b-45ce-8592-a400fbb7e602",
+      "name": "SOPS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AEQ1y1fsn9dqeTbc",
+          "name": "Google Sheets account 5"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Produtos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Estoque",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Vendas",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SOPS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FAQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FAQ": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Estoque": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Produtos": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Vendas": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "SOPS": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d5357a06-5e14-4930-9490-1a7aadddd062",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ea017a4972053d135119f4fe2df59823489854cca6cbc93a7a2090d76cb94d7e"
+  },
+  "id": "HzdXkX22t4MMD3oV",
+  "tags": []
+}
