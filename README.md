@@ -1,4 +1,4 @@
-# 🤖 NOLA AI Bot — Chatbot Inteligente com n8n + Google Sheets + Telegram
+# 🤖 AI Bot — Chatbot Inteligente com n8n + Google Sheets + Telegram
 
 > Automação criada no n8n que integra um assistente de IA ao Telegram, utilizando Google Sheets como base de conhecimento dinâmica.
 
