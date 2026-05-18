@@ -1,3 +1,4 @@
+https://github.com/alessandrodevbp/Automacao_N8N_Chat_Bot_IA/blob/main/N8N/Workflow%20N8N.png
 # 🤖 AI Bot — Chatbot Inteligente com n8n + Google Sheets + Telegram
 
 > Automação criada no n8n que integra um assistente de IA ao Telegram, utilizando Google Sheets como base de conhecimento dinâmica.
