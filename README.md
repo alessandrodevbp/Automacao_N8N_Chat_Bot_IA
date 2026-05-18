@@ -36,7 +36,7 @@ Qualquer atualização feita no Google Sheets reflete automaticamente nas respos
 | [Claude (Anthropic)](https://claude.ai) | Apoio na construção dos prompts e código |
 
 ---
-
+<div align="center"> 
 ## 🔄 Fluxo da Automação
 
 ```
@@ -54,9 +54,9 @@ Conversation Memory (armazenamento do histórico de conversação)
        ↓
 Send Telegram Message
 ```
-
+<div/>
 ---
-
+<div align="left">
 ## 📁 Estrutura da Base de Dados (Google Sheets)
 
 ```
@@ -66,7 +66,7 @@ Send Telegram Message
 ❓ faq        → id, pergunta, resposta
 📈 vendas     → pedido_id, produto, qtd, total, canal, forma_pagamento
 ```
-
+<div/>
 ---
 
 ## ⚙️ Como Configurar
