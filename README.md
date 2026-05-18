@@ -72,6 +72,7 @@ Send Telegram Message
 📈 vendas     → pedido_id, produto, qtd, total, canal, forma_pagamento
 ```
 <div/>
+       
 ---
 
 ## ⚙️ Como Configurar
