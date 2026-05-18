@@ -55,6 +55,7 @@ Conversation Memory (armazenamento do histórico de conversação)
 Send Telegram Message
 ```
 <div/>
+       
 ---
 <div align="left">
 ## 📁 Estrutura da Base de Dados (Google Sheets)
