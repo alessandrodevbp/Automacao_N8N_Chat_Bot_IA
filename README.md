@@ -61,6 +61,7 @@ Send Telegram Message
        
 ---
 <div align="left">
+
 ## 📁 Estrutura da Base de Dados (Google Sheets)
 
 ```
