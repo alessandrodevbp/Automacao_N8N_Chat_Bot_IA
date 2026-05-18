@@ -1,4 +1,3 @@
-<video src="Vídeos" controls width="100%"></video>
 # 🤖 AI Bot — Chatbot Inteligente com n8n + Google Sheets + Telegram
 
 > Automação criada no n8n que integra um assistente de IA ao Telegram, utilizando Google Sheets como base de conhecimento dinâmica.
@@ -48,7 +47,7 @@ Code JavaScript (formata o contexto)
        ↓
 AI Agent + Google Gemini (gera a resposta)
        ↓
-Limpar Markdown (remove formatações incompatíveis)
+Conversation Memory (armazenamento do histórico de conversação)
        ↓
 Send Telegram Message
 ```
@@ -79,9 +78,8 @@ Send Telegram Message
 
 **1. Clone o repositório**
 ```bash
-git clone https://github.com/seu-usuario/nola-ai-bot.git
+git clone https://github.com/alessandrodevbp/Automacao_N8N_Chat_Bot_IA.git
 ```
-
 **2. Importe o workflow no n8n**
 - Acesse seu n8n
 - Vá em **Workflows → Import**
