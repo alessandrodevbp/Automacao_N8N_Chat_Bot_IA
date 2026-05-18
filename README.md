@@ -14,7 +14,8 @@ O **NOLA AI Bot** é um chatbot inteligente desenvolvido para atendimento ao cli
 Qualquer atualização feita no Google Sheets reflete automaticamente nas respostas do bot, sem necessidade de reprogramação.
 
 ---
-
+<div align="left">
+       
 ## 🚀 Funcionalidades
 
 - 🍔 **Cardápio completo** — preços, ingredientes, alergênicos e disponibilidade no delivery
@@ -22,6 +23,7 @@ Qualquer atualização feita no Google Sheets reflete automaticamente nas respos
 - 📋 **SOPs** — procedimentos operacionais acessíveis via chat
 - ❓ **FAQ** — respostas automáticas para perguntas frequentes
 - 📊 **Vendas** — produtos mais vendidos, receita por canal e últimos pedidos
+</div> 
 
 ---
 
