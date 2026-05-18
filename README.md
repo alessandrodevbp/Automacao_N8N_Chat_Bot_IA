@@ -38,7 +38,8 @@ Qualquer atualização feita no Google Sheets reflete automaticamente nas respos
 | [Claude (Anthropic)](https://claude.ai) | Apoio na construção dos prompts e código |
 
 ---
-<div align="center"> 
+<div align="center">
+
 ## 🔄 Fluxo da Automação
 
 ```
